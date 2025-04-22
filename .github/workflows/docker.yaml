@@ -136,52 +136,19 @@ jobs:
                fi
             fi
             
-            echo "--- Debugging image_name_tag before tr ---"
-            # 打印变量值，用标记包裹
-            echo "Raw image_name_tag: >>>${image_name_tag}<<<"
-            # 打印变量值的字节表示，显示隐藏字符
-            echo "Byte dump of image_name_tag:"
-            echo "$image_name_tag" | od -c
-            echo "------------------------------------------"
-
             # 将@sha256:等字符删除
-            image_name_tag="${image_name_tag%%@*}" # 这一行是重复的，可以删除，但保留也行
-
-            echo "--- Debugging image_name_tag after first %%@* ---"
-            echo "image_name_tag after first cleanup: >>>${image_name_tag}<<<"
-            echo "Byte dump of image_name_tag after first cleanup:"
-            echo "$image_name_tag" | od -c
-            echo "-------------------------------------------------"
-
-            # 清理换行符
-            image_name_tag_clean=$(echo "$image_name_tag" | tr -d '\n\r')
-
-            echo "--- Debugging image_name_tag_clean after tr ---"
-            echo "Cleaned image_name_tag: >>>${image_name_tag_clean}<<<"
-            echo "Byte dump of image_name_tag_clean:"
-            echo "$image_name_tag_clean" | od -c
-            echo "---------------------------------------------"
-
-            # 构建新的镜像名称 (目标镜像)
-            new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$platform_prefix$name_space_prefix$image_name_tag_clean"
-
-            echo "--- Debugging new_image before docker tag ---"
-            echo "Constructed new_image: >>>${new_image}<<<"
-            echo "Byte dump of new_image:"
-            echo "$new_image" | od -c
-            echo "-------------------------------------------"
-
-            # --- 执行 Docker 命令 ---
-            echo "docker tag \"$image\" \"$new_image\"" # 打印命令
-            docker tag "$image" "$new_image" || { echo "Docker tag failed for $image"; exit 1; } # 执行命令并检查错误
+            image_name_tag="${image_name_tag%%@*}"
+            new_image="$ALIYUN_REGISTRY/$ALIYUN_NAME_SPACE/$platform_prefix$name_space_prefix$image_name_tag"
+            echo "docker tag $image $new_image"
+            docker tag $image $new_image
             echo "docker push $new_image"
-            docker push "$new_image"
+            docker push $new_image
             echo "开始清理磁盘空间"
             echo "=============================================================================="
             df -hT
             echo "=============================================================================="
-            docker rmi "$image"
-            docker rmi "$new_image"
+            docker rmi $image
+            docker rmi $new_image
             echo "磁盘空间清理完毕"
             echo "=============================================================================="
             df -hT
